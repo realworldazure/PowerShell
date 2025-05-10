@@ -1,0 +1,17 @@
+# Connect to Azure
+Connect-AzAccount
+
+# Get all resource groups
+$resourceGroups = Get-AzResourceGroup
+
+# Iterate through resource groups and delete those without locks
+foreach ($resourceGroup in $resourceGroups) {
+    # Check if the resource group has any locks
+    $lock = Get-AzResourceLock | where { $_.ResourceId -like "*$($resourceGroup.ResourceGroupName)*"}
+    if ($null -eq $lock) {
+        Write-Host "Deleting resource group: $($resourceGroup.ResourceGroupName)"
+        Remove-AzResourceGroup -Name $resourceGroup.ResourceGroupName -Force -Verbose
+    } else {
+        Write-Host "Resource group $($resourceGroup.ResourceGroupName) has a lock, skipping deletion."
+    }
+}
